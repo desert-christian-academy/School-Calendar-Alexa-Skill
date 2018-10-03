@@ -11,13 +11,13 @@ var states = {
 var alexa;
 
 //OPTIONAL: replace with "amzn1.ask.skill.[your-unique-value-here]";
-var APP_ID = undefined; 
+var APP_ID = "amzn1.ask.skill.2a2bc885-4ef7-41d7-901d-43de87b85be5"; 
 
 // URL to get the .ics from, in this instance we are getting from Stanford however this can be changed
 var URL = "http://events.stanford.edu/eventlist.ics";
 
 // Skills name 
-var skillName = "Events calendar:";
+var skillName = "Desert Christian Academy calendar:";
 
 // Message when the skill is first called
 var welcomeMessage = "You can ask for the events today. search for events by date. or say help. What would you like? ";

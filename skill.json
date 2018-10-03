@@ -5,16 +5,16 @@
         "en-US": {
           "summary": "Sample Short Description",
           "examplePhrases": [
-            "Alexa open Conqueror Calendar",
-            "Alexa ask Conqueror Calendar whats happening today",
-            "Alexa tell Conqueror Calendar get me events for tomorrow"
+            "Alexa open the DCA calendar",
+            "Alexa ask the DCA calendar whats happening today",
+            "Alexa tell the DCA calendar get me events for tomorrow"
           ],
-          "name": "Conqueror Calendar",
-          "description": "Sample Full Description"
+          "name": "The DCA Calendar",
+          "description": "This is the Calendar for Desert Christian Academy"
         }
       },
       "isAvailableWorldwide": true,
-      "testingInstructions": "Sample Testing Instructions.",
+      "testingInstructions": "Have fun and try not to break anything.",
       "category": "EDUCATION_AND_REFERENCE",
       "distributionCountries": []
     },

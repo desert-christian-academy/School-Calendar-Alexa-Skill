@@ -1,8 +1,7 @@
-
 {
-  "name": "skill-sample-nodejs-ironman-reader",
+  "name": "dca-calendar-reader",
   "version": "1.0.0",
-  "description": "A simple calendar reading skill.",
+  "description": "DCA calendar reading skill.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

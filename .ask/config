@@ -1,18 +1,39 @@
 {
   "deploy_settings": {
     "default": {
-      "skill_id": "",
+      "skill_id": "amzn1.ask.skill.2a2bc885-4ef7-41d7-901d-43de87b85be5",
       "was_cloned": false,
       "merge": {
-        "skillManifest": {
+        "manifest": {
           "apis": {
             "custom": {
               "endpoint": {
-                "uri": "ask-custom-calendar-default"
+                "uri": "ask-conqueror-calendar-default"
               }
             }
           }
         }
+      },
+      "resources": {
+        "manifest": {
+          "eTag": "2e5f57ccf59b693914c37b858c161771"
+        },
+        "interactionModel": {
+          "en-US": {
+            "eTag": "54fc23129d0f207bd339dac4dba68f22"
+          }
+        },
+        "lambda": [
+          {
+            "arn": "arn:aws:lambda:us-east-1:666958497176:function:ask-conqueror-calendar-default",
+            "functionName": "arn:aws:lambda:us-east-1:666958497176:function:ask-conqueror-calendar-default",
+            "awsRegion": "us-east-1",
+            "alexaUsage": [
+              "custom/default"
+            ],
+            "revisionId": "ddc10492-c752-472a-bcf4-f10143113f7d"
+          }
+        ]
       }
     }
   }
