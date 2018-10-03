@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "stanford calendar",
+      "invocationName": "ironman",
       "intents": [
         {
           "name": "AMAZON.HelpIntent"

@@ -1,221 +1,200 @@
-const Alexa = require('alexa-sdk');
-const ical = require('ical');
-const utils = require('util');
+var Alexa = require('alexa-sdk');
+var ical = require('ical');
+var http = require('http');
+var utils = require('util');
 
-const states = {
+var states = {
     SEARCHMODE: '_SEARCHMODE',
     DESCRIPTION: '_DESKMODE',
 };
 // local variable holding reference to the Alexa SDK object
-let alexa;
+var alexa;
 
 //OPTIONAL: replace with "amzn1.ask.skill.[your-unique-value-here]";
-let APP_ID = undefined;
+var APP_ID = undefined; 
 
 // URL to get the .ics from, in this instance we are getting from Stanford however this can be changed
-const URL = "http://events.stanford.edu/eventlist.ics";
+var URL = "http://events.stanford.edu/eventlist.ics";
 
-// Skills name
-const skillName = "Events calendar:";
+// Skills name 
+var skillName = "Events calendar:";
 
 // Message when the skill is first called
-const welcomeMessage = "You can ask for the events today. Search for events by date. or say help. What would you like? ";
+var welcomeMessage = "You can ask for the events today. search for events by date. or say help. What would you like? ";
 
 // Message for help intent
-const HelpMessage = "Here are some things you can say: Get me events for today. Tell me whats happening on the 18th of July. What events are happening next week? Get me stuff happening tomorrow. ";
+var HelpMessage = "Here are some things you can say: Is there an event today? Is there an event on the 18th of July? What are the events next week? Are there any events tomorrow?  What would you like to know?";
 
-const descriptionStateHelpMessage = "Here are some things you can say: Tell me about event one";
+var descriptionStateHelpMessage = "Here are some things you can say: Tell me about event one";
 
 // Used when there is no data within a time period
-const NoDataMessage = "Sorry there aren't any events scheduled. Would you like to search again?";
+var NoDataMessage = "Sorry there arnt't any events scheduled. Would you like to search again?";
 
 // Used to tell user skill is closing
-const shutdownMessage = "Ok see you again soon.";
+var shutdownMessage = "Ok see you again soon.";
 
-// Message used when only 1 event is found allowing for difference in punctuation
-const oneEventMessage = "There is 1 event ";
+// Message used when only 1 event is found allowing for difference in punctuation 
+var oneEventMessage = "There is 1 event ";
 
-// Message used when more than 1 event is found allowing for difference in punctuation
-const multipleEventMessage = "There are %d events ";
+// Message used when more than 1 event is found allowing for difference in punctuation 
+var multipleEventMessage = "There are %d events ";
 
 // text used after the number of events has been said
-const scheduledEventMessage = "scheduled for this time frame. I've sent the details to your Alexa app: ";
+var scheduledEventMessage = "scheduled for this time frame. I've sent the details to your Alexa app: ";
 
-const firstThreeMessage = "Here are the first %d. ";
+var firstThreeMessage = "Here are the first %d. ";
 
 // the values within the {} are swapped out for variables
-const eventSummary = "The %s event is, %s at %s on %s ";
+var eventSummary = "The %s event is, %s at %s on %s ";
 
 // Only used for the card on the companion app
-const cardContentSummary = "%s at %s on %s ";
+var cardContentSummary = "%s at %s on %s ";
 
 // More info text
-const haveEventsreprompt = "Give me an event number to hear more information.";
+var haveEventsRepromt = "Give me an event number to hear more information.";
 
 // Error if a date is out of range
-const dateOutOfRange = "Date is out of range please choose another date";
+var dateOutOfRange = "Date is out of range please choose another date";
 
 // Error if a event number is out of range
-const eventOutOfRange = "Event number is out of range please choose another event";
+var eventOutOfRange = "Event number is out of range please choose another event";
 
 // Used when an event is asked for
-const descriptionMessage = "Here's the description ";
+var descriptionMessage = "Here's the description ";
 
 // Used when an event is asked for
-const killSkillMessage = "Ok, great, see you next time.";
+var killSkillMessage = "Ok, great, see you next time.";
 
-const eventNumberMoreInfoText = "For more information on a specific event number, try saying: what's event one?";
+var eventNumberMoreInfoText = "You can say the event number for more information.";
 
 // used for title on companion app
-const cardTitle = "Events";
+var cardTitle = "Events";
 
 // output for Alexa
-let output = "";
+var output = "";
 
 // stores events that are found to be in our date range
-let relevantEvents = new Array();
+var relevantEvents = new Array();
 
 // Adding session handlers
-const newSessionHandlers = {
+var newSessionHandlers = {
     'LaunchRequest': function () {
         this.handler.state = states.SEARCHMODE;
-        this.response.speak(skillName + " " + welcomeMessage).listen(welcomeMessage);
-        this.emit(':responseReady');
-    },
-    "searchIntent": function()
-    {
-        this.handler.state = states.SEARCHMODE;
-        this.emitWithState("searchIntent");
-    },
-    'Unhandled': function () {
-        this.response.speak(HelpMessage).listen(HelpMessage);
-        this.emit(':responseReady');
+        this.emit(':ask', skillName + " " + welcomeMessage, welcomeMessage);
     },
 };
 
 // Create a new handler with a SEARCH state
-const startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
+var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
     'AMAZON.YesIntent': function () {
         output = welcomeMessage;
-        alexa.response.speak(output).listen(welcomeMessage);
-        this.emit(':responseReady');
+        alexa.emit(':ask', output, welcomeMessage);
     },
 
     'AMAZON.NoIntent': function () {
-        this.response.speak(shutdownMessage);
-        this.emit(':responseReady');
+        this.emit(':tell', shutdownMessage);
     },
 
     'AMAZON.RepeatIntent': function () {
-        this.response.speak(output).listen(HelpMessage);
+        this.emit(':ask', output, HelpMessage);
     },
 
     'searchIntent': function () {
-        // Declare variables
-        let eventList = new Array();
-        const slotValue = this.event.request.intent.slots.date.value;
-        if (slotValue != undefined)
-        {
-            let parent = this;
+        // Declare variables 
+        var eventList = new Array();
+        var slotValue = this.event.request.intent.slots.date.value;
+        var parent = this;
 
-            // Using the iCal library I pass the URL of where we want to get the data from.
-            ical.fromURL(URL, {}, function (error, data) {
-                // Loop through all iCal data found
-                for (let k in data) {
-                    if (data.hasOwnProperty(k)) {
-                        let ev = data[k];
-                        // Pick out the data relevant to us and create an object to hold it.
-                        let eventData = {
-                            summary: removeTags(ev.summary),
-                            location: removeTags(ev.location),
-                            description: removeTags(ev.description),
-                            start: ev.start
-                        };
-                        // add the newly created object to an array for use later.
-                        eventList.push(eventData);
+        // Using the iCal library I pass the URL of where we want to get the data from.
+        ical.fromURL(URL, {}, function (err, data) {
+            // Loop through all iCal data found
+            for (var k in data) {
+                if (data.hasOwnProperty(k)) {
+                    var ev = data[k]
+                    // Pick out the data relevant to us and create an object to hold it.
+                    var eventData = {
+                        summary: removeTags(ev.summary),
+                        location: removeTags(ev.location),
+                        description: removeTags(ev.description),
+                        start: ev.start
                     }
+                    // add the newly created object to an array for use later.
+                    eventList.push(eventData);
                 }
-                // Check we have data
-                if (eventList.length > 0) {
-                    // Read slot data and parse out a usable date
-                    const eventDate = getDateFromSlot(slotValue);
-                    // Check we have both a start and end date
-                    if (eventDate.startDate && eventDate.endDate) {
-                        // initiate a new array, and this time fill it with events that fit between the two dates
-                        relevantEvents = getEventsBeweenDates(eventDate.startDate, eventDate.endDate, eventList);
+            }
+            // Check we have data
+            if (eventList.length > 0) {
+                // Read slot data and parse out a usable date 
+                var eventDate = getDateFromSlot(slotValue);
+                // Check we have both a start and end date
+                if (eventDate.startDate && eventDate.endDate) {
+                    // initiate a new array, and this time fill it with events that fit between the two dates
+                    relevantEvents = getEventsBeweenDates(eventDate.startDate, eventDate.endDate, eventList);
 
-                        if (relevantEvents.length > 0) {
-                            // change state to description
-                            parent.handler.state = states.DESCRIPTION;
+                    if (relevantEvents.length > 0) {
+                        // change state to description
+                        parent.handler.state = states.DESCRIPTION;
 
-                            // Create output for both Alexa and the content card
-                            let cardContent = "";
-                            output = oneEventMessage;
-                            if (relevantEvents.length > 1) {
-                                output = utils.format(multipleEventMessage, relevantEvents.length);
-                            }
-
-                            output += scheduledEventMessage;
-
-                            if (relevantEvents.length > 1) {
-                                output += utils.format(firstThreeMessage, relevantEvents.length > 3 ? 3 : relevantEvents.length);
-                            }
-
-                            if (relevantEvents[0] != null) {
-                                let date = new Date(relevantEvents[0].start);
-                                output += utils.format(eventSummary, "First", removeTags(relevantEvents[0].summary), relevantEvents[0].location, date.toDateString() + ".");
-                            }
-                            if (relevantEvents[1]) {
-                                let date = new Date(relevantEvents[1].start);
-                                output += utils.format(eventSummary, "Second", removeTags(relevantEvents[1].summary), relevantEvents[1].location, date.toDateString() + ".");
-                            }
-                            if (relevantEvents[2]) {
-                                let date = new Date(relevantEvents[2].start);
-                                output += utils.format(eventSummary, "Third", removeTags(relevantEvents[2].summary), relevantEvents[2].location, date.toDateString() + ".");
-                            }
-
-                            for (let i = 0; i < relevantEvents.length; i++) {
-                                let date = new Date(relevantEvents[i].start);
-                                cardContent += utils.format(cardContentSummary, removeTags(relevantEvents[i].summary), removeTags(relevantEvents[i].location), date.toDateString()+ "\n\n");
-                            }
-
-                            output += eventNumberMoreInfoText;
-                            alexa.response.cardRenderer(cardTitle, cardContent);
-                            alexa.response.speak(output).listen(haveEventsreprompt);
-                        } else {
-                            output = NoDataMessage;
-                            alexa.emit(output).listen(output);
+                        // Create output for both Alexa and the content card
+                        var cardContent = "";
+                        output = oneEventMessage;
+                        if (relevantEvents.length > 1) {
+                            output = utils.format(multipleEventMessage, relevantEvents.length);
                         }
-                    }
-                    else {
-                        output = NoDataMessage;
-                        alexa.emit(output).listen(output);
-                    }
-                } else {
-                    output = NoDataMessage;
-                    alexa.emit(output).listen(output);
-                }
-            });
-        }
-        else{
-            this.response.speak("I'm sorry.  What day did you want me to look for events?").listen("I'm sorry.  What day did you want me to look for events?");
-        }
 
-        this.emit(':responseReady');
+                        output += scheduledEventMessage;
+
+                        if (relevantEvents.length > 1) {
+                            output += utils.format(firstThreeMessage, relevantEvents.length);
+                        }
+
+                        if (relevantEvents[0] != null) {
+                            var date = new Date(relevantEvents[0].start);
+                            output += utils.format(eventSummary, "First", removeTags(relevantEvents[0].summary), relevantEvents[0].location, date.toDateString() + ".");
+                        }
+                        if (relevantEvents[1]) {
+                            var date = new Date(relevantEvents[1].start);
+                            output += utils.format(eventSummary, "Second", removeTags(relevantEvents[1].summary), relevantEvents[1].location, date.toDateString() + ".");
+                        }
+                        if (relevantEvents[2]) {
+                            var date = new Date(relevantEvents[2].start);
+                            output += utils.format(eventSummary, "Third", removeTags(relevantEvents[2].summary), relevantEvents[2].location, date.toDateString() + ".");
+                        }
+
+                        for (var i = 0; i < relevantEvents.length; i++) {
+                            var date = new Date(relevantEvents[i].start);
+                            cardContent += utils.format(cardContentSummary, removeTags(relevantEvents[i].summary), removeTags(relevantEvents[i].location), date.toDateString()+ "\n\n");
+                        }
+
+                        output += eventNumberMoreInfoText;
+                        alexa.emit(':askWithCard', output, haveEventsRepromt, cardTitle, cardContent);
+                    } else {
+                        output = NoDataMessage;
+                        alexa.emit(':ask', output, output);
+                    }
+                }
+                else {
+                    output = NoDataMessage;
+                    alexa.emit(':ask', output, output);
+                }
+            } else {
+                output = NoDataMessage;
+                alexa.emit(':ask', output, output);
+            }
+        });
     },
 
     'AMAZON.HelpIntent': function () {
         output = HelpMessage;
-        this.response.speak(output).listen(output);
-        this.emit(':responseReady');
+        this.emit(':ask', output, output);
     },
 
     'AMAZON.StopIntent': function () {
-        this.response.speak(killSkillMessage);
+        this.emit(':tell', killSkillMessage);
     },
 
     'AMAZON.CancelIntent': function () {
-        this.response.speak(killSkillMessage);
+        this.emit(':tell', killSkillMessage);
     },
 
     'SessionEndedRequest': function () {
@@ -223,61 +202,52 @@ const startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
     },
 
     'Unhandled': function () {
-        this.response.speak(HelpMessage).listen(HelpMessage);
-        this.emit(':responseReady');
+        this.emit(':ask', HelpMessage, HelpMessage);
     }
 });
 
 // Create a new handler object for description state
-const descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
+var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
     'eventIntent': function () {
 
-        const reprompt = " Would you like to hear another event?";
-        let slotValue = this.event.request.intent.slots.number.value;
+        var repromt = " Would you like to hear another event?";
+        var slotValue = this.event.request.intent.slots.number.value;
 
         // parse slot value
-        const index = parseInt(slotValue, 10) - 1;
+        var index = parseInt(slotValue) - 1;
 
         if (relevantEvents[index]) {
 
             // use the slot value as an index to retrieve description from our relevant array
             output = descriptionMessage + removeTags(relevantEvents[index].description);
 
-            output += reprompt;
+            output += repromt;
 
-            this.response.cardRenderer(relevantEvents[index].summary, output);
-            this.response.speak(output).listen(reprompt);
+            this.emit(':askWithCard', output, repromt, relevantEvents[index].summary, output);
         } else {
-            this.response.speak(eventOutOfRange).listen(welcomeMessage);
+            this.emit(':tell', eventOutOfRange);
         }
-
-        this.emit(':responseReady');
     },
 
     'AMAZON.HelpIntent': function () {
-        this.response.speak(descriptionStateHelpMessage).listen(descriptionStateHelpMessage);
-        this.emit(':responseReady');
+        this.emit(':ask', descriptionStateHelpMessage, descriptionStateHelpMessage);
     },
 
     'AMAZON.StopIntent': function () {
-        this.response.speak(killSkillMessage);
-        this.emit(':responseReady');
+        this.emit(':tell', killSkillMessage);
     },
 
     'AMAZON.CancelIntent': function () {
-        this.response.speak(killSkillMessage);
-        this.emit(':responseReady');
+        this.emit(':tell', killSkillMessage);
     },
 
     'AMAZON.NoIntent': function () {
-        this.response.speak(shutdownMessage);
-        this.emit(':responseReady');
+        this.emit(':tell', shutdownMessage);
     },
 
     'AMAZON.YesIntent': function () {
         output = welcomeMessage;
-        alexa.response.speak(eventNumberMoreInfoText).listen(eventNumberMoreInfoText);
-        this.emit(':responseReady');
+        alexa.emit(':ask', eventNumberMoreInfoText, eventNumberMoreInfoText);
     },
 
     'SessionEndedRequest': function () {
@@ -285,15 +255,14 @@ const descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
     },
 
     'Unhandled': function () {
-        this.response.speak(HelpMessage).listen(HelpMessage);
-        this.emit(':responseReady');
+        this.emit(':ask', HelpMessage, HelpMessage);
     }
 });
 
 // register handlers
 exports.handler = function (event, context, callback) {
     alexa = Alexa.handler(event, context);
-    alexa.appId = APP_ID;
+    alexa.AppId = APP_ID;
     alexa.registerHandlers(newSessionHandlers, startSearchHandlers, descriptionHandlers);
     alexa.execute();
 };
@@ -301,9 +270,9 @@ exports.handler = function (event, context, callback) {
 
 // Remove HTML tags from string
 function removeTags(str) {
-    if (str) {
-        return str.replace(/<(?:.|\n)*?>/gm, '');
-    }
+    if (!str) // some iCal properties may not exist
+        return str;
+    return str.replace(/<(?:.|\n)*?>/gm, '');
 }
 
 // Given an AMAZON.DATE slot value parse out to usable JavaScript Date object
@@ -314,24 +283,25 @@ function removeTags(str) {
 // Utterances that map to a season (such as �next winter�) convert to a date with the year and a season indicator: winter: WI, spring: SP, summer: SU, fall: FA)
 function getDateFromSlot(rawDate) {
     // try to parse data
-    let date = new Date(Date.parse(rawDate));
+    var date = new Date(Date.parse(rawDate));
+    var result;
     // create an empty object to use later
-    let eventDate = {
+    var eventDate = {
 
     };
 
     // if could not parse data must be one of the other formats
     if (isNaN(date)) {
         // to find out what type of date this is, we can split it and count how many parts we have see comments above.
-        const res = rawDate.split("-");
+        var res = rawDate.split("-");
         // if we have 2 bits that include a 'W' week number
         if (res.length === 2 && res[1].indexOf('W') > -1) {
-            let dates = getWeekData(res);
+            var dates = getWeekData(res);
             eventDate["startDate"] = new Date(dates.startDate);
             eventDate["endDate"] = new Date(dates.endDate);
             // if we have 3 bits, we could either have a valid date (which would have parsed already) or a weekend
         } else if (res.length === 3) {
-            let dates = getWeekendData(res);
+            var dates = getWeekendData(res);
             eventDate["startDate"] = new Date(dates.startDate);
             eventDate["endDate"] = new Date(dates.endDate);
             // anything else would be out of range for this skill
@@ -349,14 +319,14 @@ function getDateFromSlot(rawDate) {
 // Given a week number return the dates for both weekend days
 function getWeekendData(res) {
     if (res.length === 3) {
-        const saturdayIndex = 5;
-        const sundayIndex = 6;
-        const weekNumber = res[1].substring(1);
+        var saturdayIndex = 5;
+        var sundayIndex = 6;
+        var weekNumber = res[1].substring(1);
 
-        const weekStart = w2date(res[0], weekNumber, saturdayIndex);
-        const weekEnd = w2date(res[0], weekNumber, sundayIndex);
+        var weekStart = w2date(res[0], weekNumber, saturdayIndex);
+        var weekEnd = w2date(res[0], weekNumber, sundayIndex);
 
-        return {
+        return Dates = {
             startDate: weekStart,
             endDate: weekEnd,
         };
@@ -367,15 +337,15 @@ function getWeekendData(res) {
 function getWeekData(res) {
     if (res.length === 2) {
 
-        const mondayIndex = 0;
-        const sundayIndex = 6;
+        var mondayIndex = 0;
+        var sundayIndex = 6;
 
-        const weekNumber = res[1].substring(1);
+        var weekNumber = res[1].substring(1);
 
-        const weekStart = w2date(res[0], weekNumber, mondayIndex);
-        const weekEnd = w2date(res[0], weekNumber, sundayIndex);
+        var weekStart = w2date(res[0], weekNumber, mondayIndex);
+        var weekEnd = w2date(res[0], weekNumber, sundayIndex);
 
-        return {
+        return Dates = {
             startDate: weekStart,
             endDate: weekEnd,
         };
@@ -383,10 +353,10 @@ function getWeekData(res) {
 }
 
 // Used to work out the dates given week numbers
-const w2date = function (year, wn, dayNb) {
-    const day = 86400000;
+var w2date = function (year, wn, dayNb) {
+    var day = 86400000;
 
-    const j10 = new Date(year, 0, 10, 12, 0, 0),
+    var j10 = new Date(year, 0, 10, 12, 0, 0),
         j4 = new Date(year, 0, 4, 12, 0, 0),
         mon1 = j4.getTime() - j10.getDay() * day;
     return new Date(mon1 + ((wn - 1) * 7 + dayNb) * day);
@@ -395,17 +365,19 @@ const w2date = function (year, wn, dayNb) {
 // Loops though the events from the iCal data, and checks which ones are between our start data and out end date
 function getEventsBeweenDates(startDate, endDate, eventList) {
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    var start = new Date(startDate);
+    var end = new Date(endDate);
 
-    let data = new Array();
+    var data = new Array();
 
-    for (let i = 0; i < eventList.length; i++) {
+    for (var i = 0; i < eventList.length; i++) {
         if (start <= eventList[i].start && end >= eventList[i].start) {
             data.push(eventList[i]);
         }
     }
 
-    console.log("FOUND " + data.length + " events between those times");
+    console.log("FOUND " + data.length + " events between those times")
     return data;
 }
+
+

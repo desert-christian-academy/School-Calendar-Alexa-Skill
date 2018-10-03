@@ -1,15 +1,15 @@
 {
-  "skillManifest": {
+  "manifest": {
     "publishingInformation": {
       "locales": {
         "en-US": {
           "summary": "Sample Short Description",
           "examplePhrases": [
-            "Alexa open staford calendar",
-            "Alexa ask stanford calendar whats happening today",
-            "Alexa tell stanford calendar get me events for tomorrow"
+            "Alexa open Conqueror Calendar",
+            "Alexa ask Conqueror Calendar whats happening today",
+            "Alexa tell Conqueror Calendar get me events for tomorrow"
           ],
-          "name": "Stanford Calendar",
+          "name": "Conqueror Calendar",
           "description": "Sample Full Description"
         }
       },

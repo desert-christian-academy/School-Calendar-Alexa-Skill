@@ -1,6 +1,6 @@
 
 {
-  "name": "skill-sample-nodejs-calendar-reader",
+  "name": "skill-sample-nodejs-ironman-reader",
   "version": "1.0.0",
   "description": "A simple calendar reading skill.",
   "main": "index.js",
