@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "dca schedule",
+      "invocationName": "the d.c.a. calendar",
       "intents": [
         {
           "name": "AMAZON.HelpIntent"
