@@ -5,12 +5,12 @@
         "en-US": {
           "summary": "Sample Short Description",
           "examplePhrases": [
-            "Alexa open the DCA calendar",
-            "Alexa ask the DCA calendar whats happening today",
-            "Alexa tell the DCA calendar get me events for tomorrow"
+            "Alexa open the DCA Schedule",
+            "Alexa what's the DCA Schedule for today",
+            "Alexa what's the DCA Schedule for this week"
           ],
-          "name": "The DCA Calendar",
-          "description": "This is the Calendar for Desert Christian Academy"
+          "name": "DCA Schedule",
+          "description": "This is the Schedule for Desert Christian Academy"
         }
       },
       "isAvailableWorldwide": true,

@@ -14,10 +14,10 @@ var alexa;
 var APP_ID = "amzn1.ask.skill.2a2bc885-4ef7-41d7-901d-43de87b85be5"; 
 
 // URL to get the .ics from, in this instance we are getting from Stanford however this can be changed
-var URL = "http://events.stanford.edu/eventlist.ics";
+var URL = "https://calendar.google.com/calendar/ical/tnixon%40desertchristianacademy.org/public/basic.ics";
 
 // Skills name 
-var skillName = "Desert Christian Academy calendar:";
+var skillName = "Conqueror events:";
 
 // Message when the skill is first called
 var welcomeMessage = "You can ask for the events today. search for events by date. or say help. What would you like? ";
@@ -28,7 +28,7 @@ var HelpMessage = "Here are some things you can say: Is there an event today? Is
 var descriptionStateHelpMessage = "Here are some things you can say: Tell me about event one";
 
 // Used when there is no data within a time period
-var NoDataMessage = "Sorry there arnt't any events scheduled. Would you like to search again?";
+var NoDataMessage = "Sorry there arn't any events scheduled. Would you like to search again?";
 
 // Used to tell user skill is closing
 var shutdownMessage = "Ok see you again soon.";
@@ -40,7 +40,7 @@ var oneEventMessage = "There is 1 event ";
 var multipleEventMessage = "There are %d events ";
 
 // text used after the number of events has been said
-var scheduledEventMessage = "scheduled for this time frame. I've sent the details to your Alexa app: ";
+var scheduledEventMessage = "I found: ";
 
 var firstThreeMessage = "Here are the first %d. ";
 
@@ -88,14 +88,17 @@ var newSessionHandlers = {
 var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
     'AMAZON.YesIntent': function () {
         output = welcomeMessage;
+        this.handler.state = states.SEARCHMODE;
         alexa.emit(':ask', output, welcomeMessage);
     },
 
     'AMAZON.NoIntent': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':tell', shutdownMessage);
     },
 
     'AMAZON.RepeatIntent': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':ask', output, HelpMessage);
     },
 
@@ -170,38 +173,46 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
                         alexa.emit(':askWithCard', output, haveEventsRepromt, cardTitle, cardContent);
                     } else {
                         output = NoDataMessage;
+                        parent.handler.state = states.SEARCHMODE;
                         alexa.emit(':ask', output, output);
                     }
                 }
                 else {
                     output = NoDataMessage;
+                    parent.handler.state = states.SEARCHMODE;
                     alexa.emit(':ask', output, output);
                 }
             } else {
                 output = NoDataMessage;
+                parent.handler.state = states.SEARCHMODE;
                 alexa.emit(':ask', output, output);
             }
         });
     },
 
     'AMAZON.HelpIntent': function () {
+        this.handler.state = states.SEARCHMODE;
         output = HelpMessage;
         this.emit(':ask', output, output);
     },
 
     'AMAZON.StopIntent': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':tell', killSkillMessage);
     },
 
     'AMAZON.CancelIntent': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':tell', killSkillMessage);
     },
 
     'SessionEndedRequest': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit('AMAZON.StopIntent');
     },
 
     'Unhandled': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':ask', HelpMessage, HelpMessage);
     }
 });
@@ -209,12 +220,14 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
 // Create a new handler object for description state
 var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
     'eventIntent': function () {
+        this.handler.state = states.SEARCHMODE;
 
         var repromt = " Would you like to hear another event?";
         var slotValue = this.event.request.intent.slots.number.value;
 
         // parse slot value
         var index = parseInt(slotValue) - 1;
+        this.handler.state = states.SEARCHMODE;
 
         if (relevantEvents[index]) {
 
@@ -222,14 +235,16 @@ var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
             output = descriptionMessage + removeTags(relevantEvents[index].description);
 
             output += repromt;
-
             this.emit(':askWithCard', output, repromt, relevantEvents[index].summary, output);
         } else {
             this.emit(':tell', eventOutOfRange);
         }
     },
 
+    'searchIntent': startSearchHandlers.searchIntent,
+    
     'AMAZON.HelpIntent': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':ask', descriptionStateHelpMessage, descriptionStateHelpMessage);
     },
 
@@ -238,6 +253,7 @@ var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
     },
 
     'AMAZON.CancelIntent': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':tell', killSkillMessage);
     },
 
@@ -251,10 +267,12 @@ var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
     },
 
     'SessionEndedRequest': function () {
-        this.emit('AMAZON.StopIntent');
+        this.handler.state = states.SEARCHMODE;
+        this.emit(':ask', HelpMessage, HelpMessage);
     },
 
     'Unhandled': function () {
+        this.handler.state = states.SEARCHMODE;
         this.emit(':ask', HelpMessage, HelpMessage);
     }
 });

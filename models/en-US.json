@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "the dca calendar",
+      "invocationName": "dca schedule",
       "intents": [
         {
           "name": "AMAZON.HelpIntent"
@@ -49,13 +49,28 @@
             {
               "name": "number",
               "type": "AMAZON.NUMBER"
+            },
+            {
+              "name": "date",
+              "type": "AMAZON.DATE"
             }
           ],
           "samples": [
             "tell me about event {number}",
             "whats event {number}",
             "number {number}",
-            "{number}"
+            "{number}",
+            "get me stuff happening {date}",
+            "get me events for {date}",
+            "whats on {date}",
+            "{date}",
+            "for {date}",
+            "whats happening {date}",
+            "tell me whats happening {date}",
+            "what is happening {date}",
+            "what is happening on {date}",
+            "what events are happening {date}",
+            "what events are happening on {date}"
           ]
         }
       ]
