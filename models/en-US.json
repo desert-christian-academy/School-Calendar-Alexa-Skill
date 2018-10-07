@@ -1,79 +1,99 @@
 {
   "interactionModel": {
-    "languageModel": {
-      "invocationName": "the d.c.a. calendar",
-      "intents": [
-        {
-          "name": "AMAZON.HelpIntent"
-        },
-        {
-          "name": "AMAZON.StopIntent"
-        },
-        {
-          "name": "AMAZON.RepeatIntent"
-        },
-        {
-          "name": "AMAZON.CancelIntent"
-        },
-        {
-          "name": "AMAZON.YesIntent"
-        },
-        {
-          "name": "AMAZON.NoIntent"
-        },
-        {
-          "name": "searchIntent",
-          "slots": [
-            {
-              "name": "date",
-              "type": "AMAZON.DATE"
-            }
+      "languageModel": {
+          "invocationName": "the d.c.a. calendar",
+          "intents": [
+              {
+                  "name": "AMAZON.HelpIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.StopIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.RepeatIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.CancelIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.YesIntent",
+                  "samples": []
+              },
+              {
+                  "name": "AMAZON.NoIntent",
+                  "samples": []
+              },
+              {
+                  "name": "searchIntent",
+                  "slots": [
+                      {
+                          "name": "date",
+                          "type": "AMAZON.DATE"
+                      },
+                      {
+                          "name": "keyword",
+                          "type": "AMAZON.SearchQuery"
+                      }
+                  ],
+                  "samples": [
+                      "when is the {keyword}",
+                      "when is the next {keyword}",
+                      "when is {keyword}",
+                      "get me stuff happening {date}",
+                      "get me events for {date}",
+                      "whats on {date}",
+                      "{date}",
+                      "for {date}",
+                      "whats happening {date}",
+                      "tell me whats happening {date}",
+                      "what is happening {date}",
+                      "what is happening on {date}",
+                      "what events are {date}",
+                      "what going on {date}",
+                      "what events are happening {date}",
+                      "what events are happening on {date}"
+                  ]
+              },
+              {
+                  "name": "eventIntent",
+                  "slots": [
+                      {
+                          "name": "number",
+                          "type": "AMAZON.NUMBER"
+                      },
+                      {
+                          "name": "date",
+                          "type": "AMAZON.DATE"
+                      }
+                  ],
+                  "samples": [
+                      "tell me about event {number}",
+                      "whats event {number}",
+                      "number {number}",
+                      "{number}",
+                      "get me stuff happening {date}",
+                      "get me events for {date}",
+                      "whats on {date}",
+                      "{date}",
+                      "for {date}",
+                      "whats happening {date}",
+                      "tell me whats happening {date}",
+                      "what is happening {date}",
+                      "what is happening on {date}",
+                      "what events are happening {date}",
+                      "what events are happening on {date}"
+                  ]
+              },
+              {
+                  "name": "AMAZON.NavigateHomeIntent",
+                  "samples": []
+              }
           ],
-          "samples": [
-            "get me stuff happening {date}",
-            "get me events for {date}",
-            "whats on {date}",
-            "{date}",
-            "for {date}",
-            "whats happening {date}",
-            "tell me whats happening {date}",
-            "what is happening {date}",
-            "what is happening on {date}",
-            "what events are happening {date}",
-            "what events are happening on {date}"
-          ]
-        },
-        {
-          "name": "eventIntent",
-          "slots": [
-            {
-              "name": "number",
-              "type": "AMAZON.NUMBER"
-            },
-            {
-              "name": "date",
-              "type": "AMAZON.DATE"
-            }
-          ],
-          "samples": [
-            "tell me about event {number}",
-            "whats event {number}",
-            "number {number}",
-            "{number}",
-            "get me stuff happening {date}",
-            "get me events for {date}",
-            "whats on {date}",
-            "{date}",
-            "for {date}",
-            "whats happening {date}",
-            "tell me whats happening {date}",
-            "what is happening {date}",
-            "what is happening on {date}",
-            "what events are happening {date}",
-            "what events are happening on {date}"
-          ]
-        }
-      ]
-    }
+          "types": []
+      }
   }
 }

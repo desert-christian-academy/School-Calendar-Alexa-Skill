@@ -10,13 +10,18 @@
             "Alexa what's the DCA Calendar for this week"
           ],
           "name": "DCA Calendar",
-          "description": "This is the Calendar for Desert Christian Academy"
+          "keywords": ["Desert Christian Academy Calendar"],
+          "description": "This is the Calendar for Desert Christian Academy",
+          "smallIconUri": "https://dca-fileshare.s3.amazonaws.com/images/alexasm.png",
+          "largeIconUri": "https://dca-fileshare.s3.amazonaws.com/images/alexalg.png"
         }
       },
-      "isAvailableWorldwide": true,
-      "testingInstructions": "Have fun and try not to break anything.",
+      "isAvailableWorldwide": false,
+      "testingInstructions": "Say 'Alexa, open the DCA Calendar'",
       "category": "EDUCATION_AND_REFERENCE",
-      "distributionCountries": []
+      "distributionCountries": [
+        "US"
+      ]
     },
     "apis": {
       "custom": {
@@ -25,6 +30,19 @@
         }
       }
     },
-    "manifestVersion": "1.0"
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "locales": {
+        "en-US": {
+          "termsOfUseUrl": "http://desertchristianacademy.org",
+          "privacyPolicyUrl": "http://desertchristianacademy.org"
+        }
+      },
+      "isExportCompliant": true,
+      "containsAds": false,
+      "isChildDirected": false,
+      "usesPersonalInfo": false
+    }
   }
 }

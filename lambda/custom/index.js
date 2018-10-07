@@ -14,7 +14,7 @@ var alexa;
 var APP_ID = "amzn1.ask.skill.2a2bc885-4ef7-41d7-901d-43de87b85be5"; 
 
 // URL to get the .ics from, in this instance we are getting from Stanford however this can be changed
-var URL = "https://calendar.google.com/calendar/ical/tnixon%40desertchristianacademy.org/public/basic.ics";
+var URL = "https://calendar.google.com/calendar/ical/desertchristianacademy.org_j5kp075ic0t3afulps9pc4v7us%40group.calendar.google.com/public/basic.ics";
 
 // Skills name 
 var skillName = "Conqueror events:";
@@ -105,8 +105,20 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
     'searchIntent': function () {
         // Declare variables 
         var eventList = new Array();
-        var slotValue = this.event.request.intent.slots.date.value;
+        var slotValue = this.event.request.intent.slots.date.value ? this.event.request.intent.slots.date.value : false;
+        var keywordValue = this.event.request.intent.slots.keyword.value;
         var parent = this;
+        var startDate, endDate;
+
+        if(!slotValue){
+            startDate = new Date();
+            endDate = new Date(new Date().setFullYear(new Date().getFullYear() + 1));
+
+            console.log('====================================');
+            console.log("startDate", startDate);
+            console.log("endDate", endDate);
+            console.log('====================================');
+        }
 
         // Using the iCal library I pass the URL of where we want to get the data from.
         ical.fromURL(URL, {}, function (err, data) {
@@ -127,14 +139,32 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
             }
             // Check we have data
             if (eventList.length > 0) {
-                // Read slot data and parse out a usable date 
-                var eventDate = getDateFromSlot(slotValue);
+                // Read slot data and parse out a usable date
+                if(slotValue){
+                    var eventDate = getDateFromSlot(slotValue);
+                    startDate = eventDate.startDate;
+                    endDate = eventDate.endDate;
+                    console.log('====================================');
+                    console.log("slotValue startDate", startDate);
+                    console.log("slotValue endDate", endDate);
+                    console.log('====================================');
+                }
                 // Check we have both a start and end date
-                if (eventDate.startDate && eventDate.endDate) {
+                if (startDate && endDate) {
                     // initiate a new array, and this time fill it with events that fit between the two dates
-                    relevantEvents = getEventsBeweenDates(eventDate.startDate, eventDate.endDate, eventList);
+                    relevantEvents = getEventsBeweenDates(startDate, endDate, eventList, keywordValue);
 
                     if (relevantEvents.length > 0) {
+
+                        relevantEvents.sort(function(a, b){
+                            var keyA = new Date(a.start),
+                                keyB = new Date(b.start);
+                            // Compare the 2 dates
+                            if(keyA < keyB) return -1;
+                            if(keyA > keyB) return 1;
+                            return 0;
+                        });
+                        
                         // change state to description
                         parent.handler.state = states.DESCRIPTION;
 
@@ -148,7 +178,7 @@ var startSearchHandlers = Alexa.CreateStateHandler(states.SEARCHMODE, {
                         output += scheduledEventMessage;
 
                         if (relevantEvents.length > 1) {
-                            output += utils.format(firstThreeMessage, relevantEvents.length);
+                            output += utils.format(firstThreeMessage, 3);
                         }
 
                         if (relevantEvents[0] != null) {
@@ -318,6 +348,11 @@ function getDateFromSlot(rawDate) {
             eventDate["startDate"] = new Date(dates.startDate);
             eventDate["endDate"] = new Date(dates.endDate);
             // if we have 3 bits, we could either have a valid date (which would have parsed already) or a weekend
+        } else if (res.length === 2) {
+            var dates = getMonthData(res);
+            eventDate["startDate"] = new Date(dates.startDate);
+            eventDate["endDate"] = new Date(dates.endDate);
+            // if we have 3 bits, we could either have a valid date (which would have parsed already) or a weekend
         } else if (res.length === 3) {
             var dates = getWeekendData(res);
             eventDate["startDate"] = new Date(dates.startDate);
@@ -328,8 +363,17 @@ function getDateFromSlot(rawDate) {
         }
         // original slot value was parsed correctly
     } else {
-        eventDate["startDate"] = new Date(date).setUTCHours(0, 0, 0, 0);
-        eventDate["endDate"] = new Date(date).setUTCHours(24, 0, 0, 0);
+        var res = rawDate.split("-");
+        if (res.length === 2) {
+            var dates = getMonthData(res);
+            eventDate["startDate"] = new Date(dates.startDate);
+            eventDate["endDate"] = new Date(dates.endDate);
+            // if we have 3 bits, we could either have a valid date (which would have parsed already) or a weekend
+        } else {
+            eventDate["startDate"] = new Date(rawDate).setUTCHours(0, 0, 0, 0);
+            eventDate["endDate"] = new Date(rawDate).setUTCHours(24, 0, 0, 0);
+        }
+
     }
     return eventDate;
 }
@@ -351,6 +395,8 @@ function getWeekendData(res) {
     }
 }
 
+
+
 // Given a week number return the dates for both the start date and the end date
 function getWeekData(res) {
     if (res.length === 2) {
@@ -370,6 +416,8 @@ function getWeekData(res) {
     }
 }
 
+
+
 // Used to work out the dates given week numbers
 var w2date = function (year, wn, dayNb) {
     var day = 86400000;
@@ -380,17 +428,33 @@ var w2date = function (year, wn, dayNb) {
     return new Date(mon1 + ((wn - 1) * 7 + dayNb) * day);
 };
 
-// Loops though the events from the iCal data, and checks which ones are between our start data and out end date
-function getEventsBeweenDates(startDate, endDate, eventList) {
+function getMonthData(res) {
+    if (res.length === 2) {
 
+        var startDate = new Date(res.join("-") + "-1"); 
+        var endDate = new Date(new Date(startDate).setMonth(startDate.getMonth()+1) - 1);
+
+        return Dates = {
+            startDate: startDate,
+            endDate: endDate,
+        };
+    }
+}
+
+// Loops though the events from the iCal data, and checks which ones are between our start data and out end date
+function getEventsBeweenDates(startDate, endDate, eventList, keywordValue) {
+    console.log("keywordValue", keywordValue);
+    
     var start = new Date(startDate);
     var end = new Date(endDate);
 
     var data = new Array();
 
     for (var i = 0; i < eventList.length; i++) {
-        if (start <= eventList[i].start && end >= eventList[i].start) {
-            data.push(eventList[i]);
+        console.log(eventList[i]);
+        
+        if (start <= eventList[i].start && end >= eventList[i].start && (!keywordValue || eventList[i].summary.toLowerCase().indexOf(keywordValue.toLowerCase()) > -1)) {
+            data.unshift(eventList[i]);
         }
     }
 
