@@ -262,7 +262,11 @@ var descriptionHandlers = Alexa.CreateStateHandler(states.DESCRIPTION, {
         if (relevantEvents[index]) {
 
             // use the slot value as an index to retrieve description from our relevant array
-            output = descriptionMessage + removeTags(relevantEvents[index].description);
+            if(relevantEvents[index].description){
+                output = descriptionMessage + removeTags(relevantEvents[index].description);
+            } else {
+                output = "There is no description for this event.";
+            }
 
             output += repromt;
             this.emit(':askWithCard', output, repromt, relevantEvents[index].summary, output);

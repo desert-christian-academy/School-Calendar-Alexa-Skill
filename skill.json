@@ -5,9 +5,9 @@
         "en-US": {
           "summary": "Sample Short Description",
           "examplePhrases": [
-            "Alexa open the DCA Calendar",
-            "Alexa what's the DCA Calendar for today",
-            "Alexa what's the DCA Calendar for this week"
+            "Alexa open the d.c.a calendar",
+            "Alexa ask the d.c.a calendar for events today",
+            "Alexa ask the d.c.a calendar when is then next football game"
           ],
           "name": "DCA Calendar",
           "keywords": ["Desert Christian Academy Calendar"],
